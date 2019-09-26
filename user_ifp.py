@@ -4,13 +4,17 @@ import sklearn
 import sklearn.preprocessing
 import numpy as np
 import fancyimpute
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import heapq
 import pickle
+import sys
+
+run_name = sys.argv[1]
+save_prefix = sys.argv[2]
 
 # Fixed random seed
 # Even though we fixed the random seed, there are still some randomness in the results due to SGD based algorithms
-np.random.seed(2019)
+#np.random.seed(2019)
 
 df = pd.read_csv('source.csv')
 df = df.dropna(subset=['brier'])
@@ -122,6 +126,13 @@ for index, drop_probablity in enumerate(np.linspace(0.01, 0.85, 50)):
 	plot_Y.append(df_mse['mse'])
 
 plot_Y = np.asarray(plot_Y)
+
+with open('data/{}_{}.pickle'.format(save_prefix, run_name), 'wb') as fout:
+	pickle.dump(plot_Y, fout, pickle.HIGHEST_PROTOCOL)
+
+print('Done')
+'''
+plot_Y = np.asarray(plot_Y)
 plt.plot(plot_X, plot_Y[:, 0], label='SimpleFill')
 plt.plot(plot_X, plot_Y[:, 1], label='KNN1')
 plt.plot(plot_X, plot_Y[:, 2], label='KNN3')
@@ -140,3 +151,4 @@ with open('user_ifp.pickle', 'wb') as fout:
 	pickle.dump([plot_X, plot_Y], fout, pickle.HIGHEST_PROTOCOL)
 
 print('Pause before exit')
+'''

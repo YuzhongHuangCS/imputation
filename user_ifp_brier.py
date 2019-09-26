@@ -10,24 +10,28 @@ import sklearn
 import sklearn.preprocessing
 import numpy as np
 import fancyimpute
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import heapq
 import pickle
 
 # Fixed random seed
 # Even though we fixed the random seed, there are still some randomness in the results due to SGD based algorithms
 np.random.seed(2019)
+df1 = pd.read_csv('user_score.csv')
+data = df1[['user_id', 'ifp_id']]
+enc = sklearn.preprocessing.OrdinalEncoder()
+df2 = enc.fit_transform(data).astype(int)
 
-df = pd.read_csv('source.csv')
-df = df.dropna(subset=['brier'])
+user_ids = df2[:, 0]
+ifp_ids = df2[:, 1]
+brier_scores = df1['brier_score']
 
-max_uid = max(df['uid'])
-max_ifpid = max(df['ifpid'])
+X = np.zeros((max(user_ids)+1, max(ifp_ids)+1))
+n_rows, n_columns = X.shape
 
-X = np.zeros((max_uid, max_ifpid))
-n_columns = X.shape[1]
-for index, row in df.iterrows():
-	X[row['uid']-1, row['ifpid']-1] = row['brier']
+for index, row in enumerate(df2):
+	X[row[0], row[1]] = brier_scores[index]
+
 df = pd.DataFrame(X)
 
 def calculate_mse_ary(X_filled, missing_mask):
@@ -114,7 +118,7 @@ def run_imputation(drop_probablity):
 
 	return df_mse
 
-#df_mse_80 = run_imputation(0.8)
+#df_mse_80 = run_imputation(0.01)
 #df_mse_80.to_csv('stat_user_ifp_brier.csv', index=False)
 #pdb.set_trace()
 #print('Before plot')
@@ -128,6 +132,12 @@ for index, drop_probablity in enumerate(np.linspace(0.01, 0.85, 50)):
 	plot_Y.append(df_mse['mse'])
 
 plot_Y = np.asarray(plot_Y)
+
+with open('data/{}_{}.pickle'.format(save_prefix, run_name), 'wb') as fout:
+	pickle.dump(plot_Y, fout, pickle.HIGHEST_PROTOCOL)
+
+print('Done')
+'''
 plt.plot(plot_X, plot_Y[:, 0], label='SimpleFill')
 plt.plot(plot_X, plot_Y[:, 1], label='KNN1')
 plt.plot(plot_X, plot_Y[:, 2], label='KNN3')
@@ -146,3 +156,4 @@ with open('user_ifp_brier.pickle', 'wb') as fout:
 
 pdb.set_trace()
 print('Pause before exit')
+'''
